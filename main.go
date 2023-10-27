@@ -2,43 +2,57 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/beevik/etree"
 )
 
 func main() {
-	// Define command-line flags
-	inputFile := flag.String("input", "", "Input SVG file")
-	outputFile := flag.String("output", "", "Output JSON file")
-	flag.Parse()
-
-	if *inputFile == "" {
-		fmt.Println("Please provide an input SVG file using the -input flag.")
+	if len(os.Args) != 2 {
+		fmt.Println("Usage: svg2json directory_name")
 		return
 	}
 
-	if *outputFile == "" {
-		// If the output file is not specified, create a default output file name.
-		// For example, if input is "example.svg", output will be "example.json".
-		inputFileName := *inputFile
-		*outputFile = strings.TrimSuffix(inputFileName, ".svg") + ".json"
-	}
+	dirName := os.Args[1]
 
-	// Read the SVG file
+	err := convertSVGFiles(dirName)
+	if err != nil {
+		fmt.Printf("\033[31mError: %v\033[0m\n", err)
+		return
+	}
+}
+
+func convertSVGFiles(dirName string) error {
+	return filepath.Walk(dirName, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) == ".svg" {
+			jsonFile := strings.TrimSuffix(path, ".svg") + ".json"
+			if err := convertSVGToJSON(path, jsonFile); err != nil {
+				return err
+			}
+			fmt.Printf("Converted %s to %s\n", path, jsonFile)
+		}
+		return nil
+	})
+}
+
+func convertSVGToJSON(inputFile, outputFile string) error {
 	doc := etree.NewDocument()
-	if err := doc.ReadFromFile(*inputFile); err != nil {
-		fmt.Printf("Error reading input SVG file: %v\n", err)
-		return
+	if err := doc.ReadFromFile(inputFile); err != nil {
+		return err
 	}
 
-	// Parse the SVG data and extract important information
 	svgData := parseSVG(doc.Root())
 
-	// Wrap the JSON data in the desired format
 	wrappedJSON := map[string]interface{}{
 		"api_version": "v2",
 		"kind":        "document",
@@ -46,21 +60,12 @@ func main() {
 		"spec":        svgData,
 	}
 
-	// Convert the wrapped JSON data to a JSON string
 	jsonData, err := json.MarshalIndent(wrappedJSON, "", "  ")
 	if err != nil {
-		fmt.Printf("Error converting wrapped JSON data to JSON string: %v\n", err)
-		return
+		return err
 	}
 
-	// Write JSON data to the output file
-	err = ioutil.WriteFile(*outputFile, jsonData, 0644)
-	if err != nil {
-		fmt.Printf("Error writing JSON data to the output file: %v\n", err)
-		return
-	}
-
-	fmt.Printf("SVG converted to JSON and saved to %s\n", *outputFile)
+	return ioutil.WriteFile(outputFile, jsonData, 0644)
 }
 
 func parseSVG(element *etree.Element) map[string]interface{} {
