@@ -1,66 +1,23 @@
 # SVG to JSON CLI Tool
 
-This command-line tool allows you to convert an SVG file to JSON format.
-
-## Installation
-
-To install the tool, make sure you have Go installed on your system. Then, run the following command:
-
-```bash
-go install github.com/da0x/svg2json
-```
+This Go command-line tool allows you to convert SVG files to JSON format while processing all `.svg` files in a specified directory and its subdirectories.
 
 ## Usage
-After installation, you can convert an SVG file to JSON using the following command:
+
+To use the tool, provide a directory path as a command-line argument. The tool will recursively search for `.svg` files in the specified directory and convert them to JSON format. If a JSON file already exists with the same name, it will be overwritten. The tool will print log messages indicating the conversion process.
 
 ```bash
-svg2json -input input.svg -output output.json
+svg2json directory_name
 ```
-Replace input.svg with the path to your SVG file.
-Replace output.json with the desired name for the output JSON file. If not specified, it will default to the input filename with the extension changed to .json.
-The tool will parse the SVG file and save the JSON representation to the output file.
 
+Replace directory_name with the path to the directory containing the .svg files you want to convert.
 ## Example
-Suppose you have an SVG file named example.svg that you want to convert to JSON:
+Suppose you have a directory named svg_files that contains multiple SVG files. To convert all the SVG files in this directory and its subdirectories to JSON, run the following command:
 
 ```bash
-svg2json -input example.svg
+svg2json svg_files
 ```
-This will generate a JSON file named example.json containing the SVG data in the following JSON format.
-```json
-{
-  "api_version": "v2",
-  "kind": "document",
-  "spec": {
-    "attributes": {
-      "height": "800px",
-      "viewBox": "0 0 24 24",
-      "width": "800px",
-      "xmlns": "http://www.w3.org/2000/svg"
-    },
-    "children": [
-      {
-        "attributes": {
-          "d": "M1 3v18h22V3zm1 1h20v16H2zm17 6H5V9h14zm-6 4H5v-1h8z"
-        },
-        "content": "",
-        "name": "path"
-      },
-      {
-        "attributes": {
-          "d": "M0 0h24v24H0z",
-          "fill": "none"
-        },
-        "content": "",
-        "name": "path"
-      }
-    ],
-    "name": "svg"
-  },
-  "type": "svg"
-}
-```
+The tool will process all .svg files and create corresponding .json files in the same location.
 
-## Contribution
-Feel free to contribute directly by opening an issue or a pull request.
-
+## Error Handling
+If there are errors during the conversion process, the tool will print error messages in red.
